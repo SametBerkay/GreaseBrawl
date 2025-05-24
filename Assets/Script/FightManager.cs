@@ -12,7 +12,7 @@ public class FightManager : MonoBehaviour
 
     public float fightDuration = 60f;
     public float attackInterval = 5f;
-    public float fightSpeedMultiplier = 1f;
+    public float fightSpeedMultiplier = 0.5f;
 
     private float fightTimer = 0f;
     private bool isFightActive = false;
@@ -44,14 +44,15 @@ public class FightManager : MonoBehaviour
 
     private IEnumerator FightLoop()
     {
+        Debug.Log($"Fight başlıyor → A: {fighterA?.fighterName}, B: {fighterB?.fighterName}");
+        Debug.Log($"A wrestlerInstance: {fighterA.wrestlerInstance}, B: {fighterB.wrestlerInstance}");
+
         isFightActive = true;
         fightTimer = fightDuration;
+        if (fightTimerText != null) fightTimerText.gameObject.SetActive(true);
 
         fighterA.ResetFighter();
         fighterB.ResetFighter();
-
-        fighterA.wrestlerInstance.SetAnimSpeed(fightSpeedMultiplier);
-        fighterB.wrestlerInstance.SetAnimSpeed(fightSpeedMultiplier);
 
         while (fightTimer > 0 && fighterA.isAlive && fighterB.isAlive)
         {
@@ -71,18 +72,17 @@ public class FightManager : MonoBehaviour
 
     private IEnumerator DoAttackPhase(Fighter attacker, Fighter defender)
     {
-        yield return attacker.wrestlerInstance.MoveTo(defender.wrestlerInstance.transform.position - Vector3.right * 1f, fightSpeedMultiplier);
-        yield return defender.wrestlerInstance.MoveTo(attacker.wrestlerInstance.transform.position + Vector3.right * 1f, fightSpeedMultiplier);
+        Vector3 attackerStart = attacker.wrestlerInstance.originalPosition;
+        Vector3 defenderStart = defender.wrestlerInstance.originalPosition;
+        Vector3 approachPoint = defenderStart + Vector3.left * 0.5f;
 
-        attacker.wrestlerInstance.PlayAnimation("Attack");
-        defender.wrestlerInstance.PlayAnimation("TakeDamage");
+        yield return attacker.wrestlerInstance.MoveTo(approachPoint, fightSpeedMultiplier);
 
         defender.TakeDamage(attacker.damagePerHit);
 
-        yield return new WaitForSeconds(0.5f / fightSpeedMultiplier);
+        yield return new WaitForSeconds(0.2f / fightSpeedMultiplier);
 
-        yield return attacker.wrestlerInstance.MoveTo(attacker.wrestlerInstance.originalPosition, fightSpeedMultiplier);
-        yield return defender.wrestlerInstance.MoveTo(defender.wrestlerInstance.originalPosition, fightSpeedMultiplier);
+        yield return attacker.wrestlerInstance.MoveTo(attackerStart, fightSpeedMultiplier);
     }
 
     private IEnumerator DoGrapplePhase()
@@ -91,9 +91,6 @@ public class FightManager : MonoBehaviour
 
         yield return fighterA.wrestlerInstance.MoveTo(center + Vector3.left * 0.5f, fightSpeedMultiplier);
         yield return fighterB.wrestlerInstance.MoveTo(center + Vector3.right * 0.5f, fightSpeedMultiplier);
-
-        fighterA.wrestlerInstance.PlayAnimation("IsFight");
-        fighterB.wrestlerInstance.PlayAnimation("IsFight");
 
         for (int i = 0; i < 3; i++)
         {
@@ -109,9 +106,16 @@ public class FightManager : MonoBehaviour
 
     private void EndFight()
     {
+        Debug.Log("💀 EndFight() çağrıldı.");
+
         isFightActive = false;
+        if (fightTimerText != null)
+        {
+            fightTimerText.gameObject.SetActive(false); // 👈 Timer artık gizleniyor
+        }
 
         Fighter winner = null;
+
         if (fighterA.isAlive && !fighterB.isAlive) winner = fighterA;
         else if (!fighterA.isAlive && fighterB.isAlive) winner = fighterB;
 

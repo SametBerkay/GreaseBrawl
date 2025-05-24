@@ -8,13 +8,11 @@ public class GameManager : MonoBehaviour
 
     [Header("UI Panelleri")]
     public GameObject fighterIntroPanel;
-    public GameObject resultPanel;
     public GameObject gameOverPanel;
     public TextMeshProUGUI countdownText;
     public TextMeshProUGUI playerMoneyText;
 
     [Header("Bahis Sistemi")]
-    public int playerMoney = 100;
     public Fighter selectedFighter;
     public int betAmount = 0;
 
@@ -23,6 +21,9 @@ public class GameManager : MonoBehaviour
 
     [Header("Dövüş")]
     public FightManager fightManager;
+
+    [Header("Result Panel")]
+    public ResultPanel resultPanel; // 👈 Yeni result panel
 
     private void Awake()
     {
@@ -35,32 +36,29 @@ public class GameManager : MonoBehaviour
         ShowFighterIntro();
     }
 
-  public void ShowFighterIntro()
-{
-    
-    fighterIntroPanel.SetActive(true);
-    resultPanel.SetActive(false);
-    gameOverPanel.SetActive(false);
+    public void ShowFighterIntro()
+    {
+        fighterIntroPanel.SetActive(true);
+        gameOverPanel.SetActive(false);
 
-    FighterSelectPanel.Instance.Setup(fighters); // 🟢 BU SATIR
-
-    UpdateMoneyUI();
-}
-
+        FighterSelectPanel.Instance.Setup(fighters);
+        UpdateMoneyUI();
+    }
 
     public void SelectFighter(Fighter fighter, int amount)
     {
-        if (amount > playerMoney) return;
+        if (!PlayerData.Instance.TrySpend(amount))
+        {
+            Debug.LogWarning("Yetersiz bakiye!");
+            return;
+        }
 
         selectedFighter = fighter;
         betAmount = amount;
-        playerMoney -= amount;
+
         UpdateMoneyUI();
 
-        // Rakip olan fighter'ı seç
         Fighter enemy = (fighters[0] == selectedFighter) ? fighters[1] : fighters[0];
-
-        // Fighter’ları FightManager’a gönder
         fightManager.SetFighters(selectedFighter, enemy);
 
         fighterIntroPanel.SetActive(false);
@@ -83,31 +81,22 @@ public class GameManager : MonoBehaviour
         fightManager.BeginFight(OnFightFinished);
     }
 
-    private void OnFightFinished(Fighter winner)
+  private void OnFightFinished(Fighter winner)
+{
+    Debug.Log("✅ OnFightFinished çağrıldı.");
+
+    if (resultPanel == null)
     {
-        resultPanel.SetActive(true);
-        bool playerWon = (winner == selectedFighter);
-
-        if (playerWon)
-        {
-            int earnings = Mathf.RoundToInt(betAmount * selectedFighter.odds);
-            playerMoney += earnings;
-            // Kazanma sonucu UI’ya yazdırılabilir
-        }
-
-        UpdateMoneyUI();
-
-        if (playerMoney <= 0 && !playerWon)
-        {
-            gameOverPanel.SetActive(true);
-        }
-        else
-        {
-            StartCoroutine(NextFightDelay());
-        }
+        Debug.LogError("❌ ResultPanel atanmadı!");
+        return;
     }
 
-    private IEnumerator NextFightDelay()
+    resultPanel.ShowResult(selectedFighter, winner, betAmount);
+    UpdateMoneyUI();
+}
+
+
+    public IEnumerator NextFightDelay()
     {
         yield return new WaitForSeconds(2f);
         ShowFighterIntro();
@@ -115,6 +104,6 @@ public class GameManager : MonoBehaviour
 
     private void UpdateMoneyUI()
     {
-        playerMoneyText.text = $"₺{playerMoney}";
+        playerMoneyText.text = $"${PlayerData.Instance.money}";
     }
 }

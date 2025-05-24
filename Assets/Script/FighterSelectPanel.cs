@@ -21,9 +21,9 @@ public class FighterSelectPanel : MonoBehaviour
 
     public void SetActiveFighter(FighterSelectUI selected)
     {
-        foreach (var f in fighterUIs)
-            f.SetActive(false);
-
-        selected.SetActive(true);
+        foreach (var ui in fighterUIs)
+        {
+            ui.SetSelected(ui == selected);
+        }
     }
 }
