@@ -11,16 +11,13 @@ public class FighterSelectUI : MonoBehaviour
     public TextMeshProUGUI damageText;
     public TextMeshProUGUI oddsText;
 
-    [Header("Butonlar ve Panel")]
+    [Header("Butonlar ve Bahis Paneli")]
     public Button selectButton;
     public Button startButton;
     public GameObject betPanel;
-
-    [Header("Bet Controller")]
     public BetController betController;
 
     private Fighter fighterData;
-    private bool isSelected = false;
 
     public void Setup(Fighter fighter)
     {
@@ -30,44 +27,33 @@ public class FighterSelectUI : MonoBehaviour
         healthText.text = $"Can: {fighter.maxHealth}";
         damageText.text = $"Hasar: {fighter.damagePerHit}";
         oddsText.text = $"Oran: {fighter.odds}x";
+        portrait.sprite = fighter.portrait;
 
-        SetSelected(false);
-        SetActiveUI(false);
+        SetActive(false);
         betController.ResetBet();
 
         selectButton.onClick.RemoveAllListeners();
-        startButton.onClick.RemoveAllListeners();
-
         selectButton.onClick.AddListener(OnFighterSelected);
+
+        startButton.onClick.RemoveAllListeners();
         startButton.onClick.AddListener(OnStartClicked);
     }
 
     private void OnFighterSelected()
     {
-        Debug.Log($"🔘 Seçildi: {fighterData.fighterName}");
         FighterSelectPanel.Instance.SetActiveFighter(this);
     }
 
     private void OnStartClicked()
     {
         int bet = betController.CurrentBet;
-        Debug.Log($"🎯 Start basıldı → {fighterData.fighterName} için ₺{bet} bahis");
-
         GameManager.Instance.SelectFighter(fighterData, bet);
         FighterSelectPanel.Instance.gameObject.SetActive(false);
     }
 
-    public void SetActiveUI(bool state)
+    public void SetActive(bool state)
     {
         betPanel.SetActive(state);
         startButton.gameObject.SetActive(state);
     }
-
-    public void SetSelected(bool selected)
-    {
-        isSelected = selected;
-        SetActiveUI(selected);
-    }
-
-    public bool IsSelected => isSelected;
 }

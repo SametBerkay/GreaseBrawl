@@ -1,14 +1,14 @@
+
 using UnityEngine;
 using TMPro;
 using UnityEngine.UI;
 
 public class BetController : MonoBehaviour
 {
-    [Header("UI Referansları")]
     public Button plusButton;
     public Button minusButton;
     public TextMeshProUGUI betAmountText;
-    public TextMeshProUGUI balanceText; // isteğe bağlı
+    public TextMeshProUGUI balanceText; // opsiyonel
 
     private int currentBet = 50;
     public int CurrentBet => currentBet;
@@ -41,7 +41,6 @@ public class BetController : MonoBehaviour
     private void UpdateUI()
     {
         betAmountText.text = $"Bahis: ${currentBet}";
-
         if (balanceText != null)
             balanceText.text = $"Bakiye: ${PlayerData.Instance.money}";
     }

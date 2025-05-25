@@ -21,7 +21,6 @@ public class PlayerData : MonoBehaviour
     public bool TrySpend(int amount)
     {
         if (amount > money) return false;
-
         money -= amount;
         return true;
     }

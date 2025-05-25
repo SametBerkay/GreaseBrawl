@@ -2,7 +2,7 @@ using UnityEngine;
 using TMPro;
 using UnityEngine.UI;
 using UnityEngine.SceneManagement;
-using System.Collections;
+
 public class ResultPanel : MonoBehaviour
 {
     [Header("UI Bileşenleri")]
@@ -23,14 +23,17 @@ public class ResultPanel : MonoBehaviour
         winner = winnerFighter;
         betAmount = amount;
 
+        // Kazanma durumu ve kazanç hesapla
         bool playerWon = (winner == betFighter);
         earnings = playerWon ? Mathf.RoundToInt(betAmount * betFighter.odds) : 0;
 
+        // Parayı ekle
         if (earnings > 0)
         {
             PlayerData.Instance.AddMoney(earnings);
         }
 
+        // UI'ya yaz
         betFighterText.text = $"Bahis Yapılan: {betFighter.fighterName}";
         winnerFighterText.text = $"Kazanan: {(winner != null ? winner.fighterName : "Beraberlik")}";
         earningsText.text = $"Kazanç: ${earnings}";
@@ -38,20 +41,30 @@ public class ResultPanel : MonoBehaviour
 
         gameObject.SetActive(true);
 
+        // Continue butonuna tıklama
         continueButton.onClick.RemoveAllListeners();
         continueButton.onClick.AddListener(OnContinueClicked);
     }
 
     private void OnContinueClicked()
     {
-        if (PlayerData.Instance.money >= 50)
+        int balance = PlayerData.Instance.money;
+
+        // 🟢 Kazanma kontrolü
+        if (balance >= GameManager.Instance.winTarget)
+        {
+            SceneManager.LoadScene("WinScene");
+        }
+        // 🔴 Kaybetme kontrolü (para yetmez veya maç limiti dolmuş)
+        else if (balance < 50 || GameManager.Instance.currentMatch >= GameManager.Instance.maxMatches)
+        {
+            SceneManager.LoadScene("DefeatScene");
+        }
+        // 🔁 Devam edilebilir
+        else
         {
             gameObject.SetActive(false);
             GameManager.Instance.StartCoroutine(GameManager.Instance.NextFightDelay());
-        }
-        else
-        {
-            SceneManager.LoadScene("DefeatScene");
         }
     }
 }

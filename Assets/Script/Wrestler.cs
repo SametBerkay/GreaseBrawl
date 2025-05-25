@@ -13,6 +13,7 @@ public class Wrestler : MonoBehaviour
 
     public Slider healthSlider;
     public TextMeshProUGUI healthText;
+public Fighter fighterData; // 👈 Bu alan yoksa ekle
 
     public bool IsAlive => health > 0;
 
